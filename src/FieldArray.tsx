@@ -44,16 +44,35 @@ export class FieldArray extends React.Component<
     setFieldValue(name, val);
   };
 
-  push = (value: any) => this.changeValue((array: any[]) => [...array, value]);
+  changeTouched = (fn: Function) => {
+    const { setFieldTouched, touched, values } = this.context.formik;
+    const { name } = this.props;
+    const valueArray = fn(dlv(values, name));
+    const touchedArray = fn(dlv(touched, name) || valueArray.map(() => false));
+    for (let i = 0; i < touchedArray.length; i++) {
+      setFieldTouched(name, touchedArray[i]);
+    }
+  };
 
-  swap = (indexA: number, indexB: number) =>
+  push = (value: any) => {
+    this.changeValue((array: any[]) => [...array, value]);
+    this.changeTouched((array: any[]) => [...array, false]);
+  };
+
+  swap = (indexA: number, indexB: number) => {
     this.changeValue((array: any[]) => swap(array, indexA, indexB));
+    this.changeTouched((array: any[]) => swap(array, indexA, indexB));
+  };
 
-  move = (from: number, to: number) =>
+  move = (from: number, to: number) => {
     this.changeValue((array: any[]) => move(array, from, to));
+    this.changeTouched((array: any[]) => move(array, from, to));
+  };
 
-  insert = (index: number, value: any) =>
+  insert = (index: number, value: any) => {
     this.changeValue((array: any[]) => insert(array, index, value));
+    this.changeTouched((array: any[]) => insert(array, index, false));
+  };
 
   unshift = (value: any) => {
     let arr = [];
@@ -61,6 +80,7 @@ export class FieldArray extends React.Component<
       arr = array ? [value, ...array] : [value];
       return arr;
     });
+    this.changeTouched((array: any[]) => (array ? [value, ...array] : [value]));
     return arr.length;
   };
 
@@ -69,6 +89,11 @@ export class FieldArray extends React.Component<
     this.changeValue((array: any[]) => {
       const copy = [...(array || [])];
       result = copy[index];
+      copy.splice(index, 1);
+      return copy;
+    });
+    this.changeTouched((array: any[]) => {
+      const copy = [...(array || [])];
       copy.splice(index, 1);
       return copy;
     });

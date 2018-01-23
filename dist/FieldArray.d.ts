@@ -28,6 +28,7 @@ export declare class FieldArray extends React.Component<
     formik: PropTypes.Requireable<any>;
   };
   changeValue: (fn: Function) => void;
+  changeTouched: (fn: Function) => void;
   push: (value: any) => void;
   swap: (indexA: number, indexB: number) => void;
   move: (from: number, to: number) => void;

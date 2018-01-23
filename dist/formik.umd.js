@@ -4043,15 +4043,30 @@ var FieldArray = (function (_super) {
             var val = fn(dlv(values$$1, name));
             setFieldValue(name, val);
         };
-        _this.push = function (value) { return _this.changeValue(function (array) { return array.concat([value]); }); };
+        _this.changeTouched = function (fn) {
+            var _a = _this.context.formik, setFieldTouched = _a.setFieldTouched, touched = _a.touched, values$$1 = _a.values;
+            var name = _this.props.name;
+            var valueArray = fn(dlv(values$$1, name));
+            var touchedArray = fn(dlv(touched, name) || valueArray.map(function () { return false; }));
+            for (var i = 0; i < touchedArray.length; i++) {
+                setFieldTouched(name, touchedArray[i]);
+            }
+        };
+        _this.push = function (value) {
+            _this.changeValue(function (array) { return array.concat([value]); });
+            _this.changeTouched(function (array) { return array.concat([false]); });
+        };
         _this.swap = function (indexA, indexB) {
-            return _this.changeValue(function (array) { return swap(array, indexA, indexB); });
+            _this.changeValue(function (array) { return swap(array, indexA, indexB); });
+            _this.changeTouched(function (array) { return swap(array, indexA, indexB); });
         };
         _this.move = function (from, to) {
-            return _this.changeValue(function (array) { return move(array, from, to); });
+            _this.changeValue(function (array) { return move(array, from, to); });
+            _this.changeTouched(function (array) { return move(array, from, to); });
         };
         _this.insert = function (index$$1, value) {
-            return _this.changeValue(function (array) { return insert(array, index$$1, value); });
+            _this.changeValue(function (array) { return insert(array, index$$1, value); });
+            _this.changeTouched(function (array) { return insert(array, index$$1, false); });
         };
         _this.unshift = function (value) {
             var arr = [];
@@ -4059,6 +4074,7 @@ var FieldArray = (function (_super) {
                 arr = array ? [value].concat(array) : [value];
                 return arr;
             });
+            _this.changeTouched(function (array) { return array ? [value].concat(array) : [value]; });
             return arr.length;
         };
         _this.remove = function (index$$1) {
@@ -4066,6 +4082,11 @@ var FieldArray = (function (_super) {
             _this.changeValue(function (array) {
                 var copy = (array || []).slice();
                 result = copy[index$$1];
+                copy.splice(index$$1, 1);
+                return copy;
+            });
+            _this.changeTouched(function (array) {
+                var copy = (array || []).slice();
                 copy.splice(index$$1, 1);
                 return copy;
             });
@@ -4340,7 +4361,7 @@ var Formik = (function (_super) {
     };
     Formik.prototype.render = function () {
         var _a = this.props, component = _a.component, render = _a.render, children = _a.children, isInitialValid = _a.isInitialValid;
-        var dirty = values(this.state.touched).filter(Boolean).length > 0;
+        var dirty = !index$4(this.initialValues, this.state.values);
         var props = __assign({}, this.state, { dirty: dirty, isValid: dirty
                 ? this.state.errors && Object.keys(this.state.errors).length === 0
                 : isInitialValid !== false && isFunction(isInitialValid)
